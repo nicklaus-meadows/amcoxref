@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AMCO Instrument Cross Reference</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #202427;
+        --muted: #5f6870;
+        --line: #d7dde2;
+        --panel: #f7f9fb;
+        --accent: #006db6;
+        --accent-dark: #004f86;
+        --warning: #8a4b00;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        color: var(--ink);
+        background: #ffffff;
+      }
+
+      main {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 40px 0 56px;
+      }
+
+      .page-header {
+        margin-bottom: 22px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(2rem, 5vw, 3.75rem);
+        line-height: 1.02;
+        letter-spacing: 0;
+      }
+
+      .intro {
+        max-width: 740px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+
+      .search-wrap {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        padding: 14px 0;
+        margin-bottom: 8px;
+        background: rgba(255, 255, 255, 0.96);
+        border-bottom: 1px solid var(--line);
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      input[type="search"] {
+        width: 100%;
+        min-height: 52px;
+        padding: 0 16px;
+        color: var(--ink);
+        border: 1px solid #aab4bd;
+        border-radius: 6px;
+        font-size: 1.05rem;
+        outline: none;
+      }
+
+      input[type="search"]:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(0, 109, 182, 0.16);
+      }
+
+      .status {
+        min-height: 22px;
+        margin: 12px 0 18px;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .empty-state,
+      .error-state {
+        display: none;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--panel);
+        line-height: 1.5;
+      }
+
+      .empty-state a {
+        color: var(--accent-dark);
+        font-weight: 700;
+      }
+
+      .error-state {
+        color: var(--warning);
+        border-color: #e5bf82;
+        background: #fff8ed;
+      }
+
+      .results {
+        display: none;
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+      }
+
+      table {
+        width: 100%;
+        min-width: 880px;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 13px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: #384049;
+        background: var(--panel);
+        font-size: 0.82rem;
+        text-transform: uppercase;
+      }
+
+      td {
+        font-size: 0.95rem;
+        line-height: 1.42;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      a.item-link {
+        color: var(--accent-dark);
+        font-weight: 700;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+      }
+
+      .instrument-cell {
+        min-width: 220px;
+      }
+
+      .description-cell {
+        min-width: 320px;
+      }
+
+      @media (max-width: 700px) {
+        main {
+          width: min(100% - 24px, 1120px);
+          padding-top: 28px;
+        }
+
+        h1 {
+          font-size: 2.15rem;
+        }
+
+        .intro {
+          font-size: 0.95rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="page-header">
+        <h1>AMCO Instrument Cross Reference</h1>
+        <p class="intro">
+          <strong
+            >SEARCH BY INSTRUMENT THATS ALL WE'RE TESTING RIGHT NOW</strong
+          >
+        </p>
+      </header>
+
+      <section class="search-wrap" aria-label="Instrument search">
+        <label for="instrumentSearch">Instrument</label>
+        <input
+          id="instrumentSearch"
+          type="search"
+          placeholder="Search by Instrument"
+          autocomplete="off"
+          aria-describedby="resultStatus"
+        />
+      </section>
+
+      <p id="resultStatus" class="status" aria-live="polite"></p>
+
+      <div id="emptyState" class="empty-state">
+        No results found - please try again or contact
+        <a href="mailto:service@gfschemicals.com">customer service</a>.
+      </div>
+
+      <div id="errorState" class="error-state">
+        Search data could not be loaded. Please make sure amcoxref.csv is
+        available next to this page.
+      </div>
+
+      <section id="results" class="results" aria-label="Search results">
+        <table>
+          <thead>
+            <tr>
+              <th>Brand</th>
+              <th>Instrument</th>
+              <th>GFS Item #</th>
+              <th>Title</th>
+              <th>Web Description</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      const searchInput = document.querySelector("#instrumentSearch");
+      const statusEl = document.querySelector("#resultStatus");
+      const resultsEl = document.querySelector("#results");
+      const resultsBody = document.querySelector("#resultsBody");
+      const emptyState = document.querySelector("#emptyState");
+      const errorState = document.querySelector("#errorState");
+
+      let rows = [];
+
+      function parseCsv(text) {
+        const output = [];
+        let row = [];
+        let value = "";
+        let insideQuotes = false;
+
+        for (let index = 0; index < text.length; index += 1) {
+          const char = text[index];
+          const nextChar = text[index + 1];
+
+          if (char === '"') {
+            if (insideQuotes && nextChar === '"') {
+              value += '"';
+              index += 1;
+            } else {
+              insideQuotes = !insideQuotes;
+            }
+            continue;
+          }
+
+          if (char === "," && !insideQuotes) {
+            row.push(value);
+            value = "";
+            continue;
+          }
+
+          if ((char === "\n" || char === "\r") && !insideQuotes) {
+            if (char === "\r" && nextChar === "\n") {
+              index += 1;
+            }
+            row.push(value);
+            if (row.some((cell) => cell !== "")) {
+              output.push(row);
+            }
+            row = [];
+            value = "";
+            continue;
+          }
+
+          value += char;
+        }
+
+        if (value || row.length) {
+          row.push(value);
+          output.push(row);
+        }
+
+        return output;
+      }
+
+      function normalize(value) {
+        return value.trim().toLowerCase();
+      }
+
+      function setVisible(element, isVisible, displayValue = "block") {
+        element.style.display = isVisible ? displayValue : "none";
+      }
+
+      function clearResults() {
+        resultsBody.replaceChildren();
+        setVisible(resultsEl, false);
+        setVisible(emptyState, false);
+        statusEl.textContent = "";
+      }
+
+      function buildCell(text, className) {
+        const cell = document.createElement("td");
+        if (className) {
+          cell.className = className;
+        }
+        cell.textContent = text;
+        return cell;
+      }
+
+      function renderResults(matches) {
+        const fragment = document.createDocumentFragment();
+
+        matches.forEach((item) => {
+          const tr = document.createElement("tr");
+          const link = document.createElement("a");
+          const itemCell = document.createElement("td");
+
+          link.href = item.url;
+          link.textContent = item.itemNumber;
+          link.className = "item-link";
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          itemCell.append(link);
+
+          tr.append(
+            buildCell(item.brand),
+            buildCell(item.instrument, "instrument-cell"),
+            itemCell,
+            buildCell(item.title),
+            buildCell(item.description, "description-cell"),
+          );
+          fragment.append(tr);
+        });
+
+        resultsBody.replaceChildren(fragment);
+        setVisible(resultsEl, true, "block");
+        setVisible(emptyState, false);
+        statusEl.textContent = `${matches.length} result${matches.length === 1 ? "" : "s"} found`;
+      }
+
+      function handleSearch() {
+        const query = normalize(searchInput.value);
+
+        if (!query) {
+          clearResults();
+          return;
+        }
+
+        const matches = rows.filter((item) =>
+          normalize(item.instrument).includes(query),
+        );
+
+        if (!matches.length) {
+          resultsBody.replaceChildren();
+          setVisible(resultsEl, false);
+          setVisible(emptyState, true);
+          statusEl.textContent = "";
+          return;
+        }
+
+        renderResults(matches);
+      }
+
+      async function loadData() {
+        try {
+          const response = await fetch("amcoxref.csv", { cache: "no-store" });
+          if (!response.ok) {
+            throw new Error(
+              `CSV request failed with status ${response.status}`,
+            );
+          }
+
+          const text = await response.text();
+          const records = parseCsv(text.replace(/^\uFEFF/, ""));
+
+          rows = records.slice(1).map((record) => ({
+            brand: record[0] || "",
+            instrument: record[1] || "",
+            itemNumber: record[2] || "",
+            title: record[3] || "",
+            description: record[4] || "",
+            url: record[5] || "",
+          }));
+
+          searchInput.disabled = false;
+          statusEl.textContent = "";
+        } catch (error) {
+          console.error(error);
+          searchInput.disabled = true;
+          setVisible(errorState, true);
+        }
+      }
+
+      searchInput.disabled = true;
+      searchInput.addEventListener("input", handleSearch);
+      loadData();
+    </script>
+  </body>
+</html>
